@@ -2,7 +2,7 @@
 
 Integración personalizada de Home Assistant, de **solo lectura**, para el perfil USB
 HID observado en un Axpert MAX TWIN 11 kW con WatchPower. Se instala como repositorio
-personalizado de HACS. Versión experimental `0.1.0`.
+personalizado de HACS. Versión experimental `0.1.1`.
 
 **Verificado:** reproducción offline de 29 respuestas completas de `prueba.pcapng`,
 CRC de las peticiones y respuestas, fragmentación de 8 bytes y sensores indicados
@@ -20,7 +20,7 @@ con todos los MAX, MAX II o TWIN por compartir nombre o VID:PID.
 3. Descarga la integración y reinicia Home Assistant.
 4. Añade **Axpert MAX TWIN** en Ajustes → Dispositivos y servicios.
 5. Introduce el `/dev/hidrawN` correspondiente al inversor y un intervalo de al menos
-   15 segundos (predeterminado 30).
+   5 segundos (predeterminado 5).
 
 Instalación manual: copia `custom_components/axpert_max_twin` a
 `/config/custom_components/axpert_max_twin` y reinicia. No necesita un módulo externo,
@@ -51,6 +51,8 @@ antigua; los de ESPHome corresponden a otros dispositivos. Ninguno demuestra que
 `axpert_max_twin` se haya instalado. Deshabilita la antigua antes de configurar esta
 para evitar dos clientes del mismo USB. El formulario inicial no consulta hardware:
 la falta de USB no debe impedir que aparezca en la lista.
+
+El intervalo de una integración existente se cambia desde **Axpert MAX TWIN → Configurar**. Se admiten valores entre 5 y 3600 segundos y el cambio recarga la integración automáticamente. Las entradas existentes conservan su intervalo hasta que lo cambies.
 
 ## Sensores
 
