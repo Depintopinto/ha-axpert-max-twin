@@ -25,11 +25,12 @@ Las lecturas pendientes sin carga útil no son respuestas vacías del inversor.
 | QPIGS | `51 50 49 47 53 b7 a9 0d` | 14 | 1 |
 | QPIGS2 | `51 50 49 47 53 32 68 2d 0d` | 7 | 0 |
 | QMOD | `51 4d 4f 44 49 c1 0d` | 8 | 0 |
+| QPIWS | `51 50 49 57 53 b4 da 0d` | 11 | 0 |
 
 QPIGS2 requiere dos informes de salida, el segundo `0d 00 00 00 00 00 00 00`.
-QMOD ocupa un informe, con un cero final. Las 30 peticiones coinciden byte por byte
+QMOD ocupa un informe, con un cero final. Las 41 peticiones coinciden byte por byte
 con el constructor CRC16-XMODEM (valor inicial 0, polinomio 0x1021, orden alto/bajo,
-incremento de bytes CRC 0x28/0x0d/0x0a). Las 29 respuestas completas pasan CRC.
+incremento de bytes CRC 0x28/0x0d/0x0a). Las 40 respuestas completas pasan CRC.
 La petición final QPIGS del paquete 2139 tiene una respuesta sin terminador y se rechaza.
 La captura empieza con el final de una respuesta cuya petición no está presente;
 esa respuesta huérfana no se asigna a una consulta inventada.
