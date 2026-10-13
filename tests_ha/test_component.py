@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 class HomeAssistantTests(unittest.IsolatedAsyncioTestCase):
     async def test_setup_and_unload(self):
         hass = SimpleNamespace(config_entries=SimpleNamespace(
-            async_forward_entry_setups=AsyncMock(), async_unload_platforms=AsyncMock(return_value=True)))
+            async_forward_entry_setups=AsyncMock(), async_unload_platforms=AsyncMock(return_value=True)),
+            bus=SimpleNamespace(async_listen_once=MagicMock()))
         entry = SimpleNamespace(entry_id='test', data={'path':'/dev/hidraw0','interval':30},
                                 async_on_unload=MagicMock(), add_update_listener=MagicMock())
         with patch('custom_components.axpert_max_twin.AxpertCoordinator') as factory:
@@ -33,8 +34,13 @@ class HomeAssistantTests(unittest.IsolatedAsyncioTestCase):
             coordinator.async_config_entry_first_refresh.assert_awaited_once()
             coordinator.async_restore_energy.assert_awaited_once()
             hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(entry,['sensor'])
-            self.assertTrue(await async_unload_entry(hass,entry))
+            from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+            shutdown_event, shutdown_callback=hass.bus.async_listen_once.call_args.args
+            self.assertEqual(shutdown_event,EVENT_HOMEASSISTANT_FINAL_WRITE)
+            await shutdown_callback(None)
             coordinator.async_save_energy.assert_awaited_once()
+            self.assertTrue(await async_unload_entry(hass,entry))
+            self.assertEqual(coordinator.async_save_energy.await_count,2)
 
     async def test_interval_options_accept_five_and_reject_four(self):
         entry = SimpleNamespace(options={},data={'interval':30})
