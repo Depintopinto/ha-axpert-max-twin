@@ -26,9 +26,9 @@ class DiscoveryTests(unittest.IsolatedAsyncioTestCase):
                     self.assertIn(DOMAIN, components)
                     self.assertTrue(components[DOMAIN].config_flow)
                     self.assertIn(DOMAIN, await loader.async_get_config_flows(hass))
-                    self.assertIn(DOMAIN, await loader.async_get_config_flows(hass, type_filter='device'))
                     descriptions = await loader.async_get_integration_descriptions(hass)
                     self.assertEqual(descriptions['custom']['integration'][DOMAIN]['name'], 'Axpert MAX TWIN')
+                    self.assertEqual(descriptions['custom']['integration'][DOMAIN]['integration_type'], 'device')
                     platform = await components[DOMAIN].async_get_platform('config_flow')
                     flow = platform.AxpertConfigFlow()
                     flow.hass = hass
