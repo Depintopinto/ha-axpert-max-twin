@@ -19,8 +19,8 @@ class TransportTests(unittest.TestCase):
              patch.object(t.Path,'resolve',return_value=t.Path('/dev/hidraw0')), \
              patch.object(t.Path,'read_text',return_value='HID_ID=0003:00000665:00005161\n'), \
              patch.object(t.os,'open',return_value=42), patch.object(t.os,'close') as close, \
-             patch.object(client,'_query',side_effect=[({'load_power':2696},b'valid'),TimeoutError('no input'),({'mode':'B'},b'valid')]):
-            self.assertEqual(client.poll(),{'load_power':2696,'mode':'B'})
+             patch.object(client,'_query',side_effect=[({'load_power':2696},b'valid'),TimeoutError('no input'),({'mode':'B'},b'valid'),({'alarm_state':'normal'},b'valid')]):
+            self.assertEqual(client.poll(),{'load_power':2696,'mode':'B','alarm_state':'normal'})
             self.assertEqual(client.diagnostics['QPIGS2']['status'],'TimeoutError')
             close.assert_called_once_with(42)
 
@@ -37,6 +37,18 @@ class TransportTests(unittest.TestCase):
             query.assert_called_once_with(42,'QPIGS')
             close.assert_called_once_with(42)
             self.assertEqual(client.diagnostics['QMOD']['status'],'not_polled')
+            self.assertEqual(client.diagnostics['QPIWS']['status'],'not_polled')
+
+    def test_optional_alarm_failure_keeps_core_status(self):
+        client=t.HidrawTransport('/dev/hidraw0')
+        fcntl=SimpleNamespace(flock=lambda *args:None,LOCK_EX=1,LOCK_NB=2)
+        with patch.dict(sys.modules,{'fcntl':fcntl}), patch.object(t.os,'O_NONBLOCK',2048,create=True), \
+             patch.object(t.Path,'resolve',return_value=t.Path('/dev/hidraw0')), \
+             patch.object(t.Path,'read_text',return_value='HID_ID=0003:00000665:00005161'), \
+             patch.object(t.os,'open',return_value=42), patch.object(t.os,'close'), \
+             patch.object(client,'_query',side_effect=[({'load_power':1},b'x'),({'pv2_power':2},b'x'),({'mode':'B'},b'x'),p.UnsupportedCommand('NAK')]):
+            self.assertEqual(client.poll(),{'load_power':1,'pv2_power':2,'mode':'B'})
+            self.assertEqual(client.diagnostics['QPIWS']['status'],'UnsupportedCommand')
 
     def test_wrong_usb_identity_never_writes(self):
         with patch.object(t.Path,'resolve',return_value=t.Path('/dev/hidraw0')), \

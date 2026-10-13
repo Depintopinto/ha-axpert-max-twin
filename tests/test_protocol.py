@@ -24,7 +24,7 @@ class ProtocolTests(unittest.TestCase):
                 else:
                     p.parse(command, response)
                     complete += 1
-        self.assertEqual(complete, 29)
+        self.assertEqual(complete, 40)
 
     def test_observed_values(self):
         expected = {
@@ -36,7 +36,49 @@ class ProtocolTests(unittest.TestCase):
         }
         for command, values in expected.items():
             tx = next(t for t in FIXTURE['transactions'] if t['command'] == command)
-            self.assertEqual(p.parse(command, bytes.fromhex(tx['response_hex'])), values)
+            actual=p.parse(command, bytes.fromhex(tx['response_hex']))
+            self.assertEqual({key:actual[key] for key in values}, values)
+
+    def test_added_qpigs_fields_from_capture(self):
+        tx=next(t for t in FIXTURE['transactions'] if t['command']=='QPIGS')
+        values=p.parse('QPIGS',bytes.fromhex(tx['response_hex']))
+        self.assertEqual({key:values[key] for key in ('grid_voltage','grid_frequency','output_voltage',
+            'output_frequency','load_apparent_power','load_percent','temperature')},
+            {'grid_voltage':0,'grid_frequency':0,'output_voltage':230.1,'output_frequency':50,
+             'load_apparent_power':2696,'load_percent':24,'temperature':54})
+
+    def test_captured_warning_is_line_fail(self):
+        tx=next(t for t in FIXTURE['transactions'] if t['command']=='QPIWS')
+        values=p.parse('QPIWS',bytes.fromhex(tx['response_hex']))
+        self.assertEqual(values['active_warnings'],['line_fail'])
+        self.assertEqual(values['alarm_state'],'warning')
+
+    def test_synthetic_warning_fault_and_unknown_states(self):
+        # Synthetic bit changes test decoding; they do not claim captured fault support.
+        for bit,state in ((None,'normal'),(1,'fault'),(9,'warning'),(22,'unknown'),(32,'unknown')):
+            body=bytearray(b'('+b'0'*36)
+            if bit is not None: body[bit+1]=ord('1')
+            values=p.parse('QPIWS',bytes(body)+p.crc(body)+b'\r')
+            self.assertEqual(values['alarm_state'],state)
+
+    def test_warning_layout_not_guessed(self):
+        for payload in (b'('+b'0'*32,b'('+b'0'*35+b'2'):
+            with self.assertRaises(p.ProtocolError): p.parse('QPIWS',payload+p.crc(payload)+b'\r')
+
+    def test_derived_power_current_and_mode(self):
+        values=p.derived({'output_voltage':230,'load_apparent_power':2700,'load_power':2500,
+                         'pv1_power':1427,'pv2_power':1290,'mode':'B'})
+        self.assertAlmostEqual(values['output_current_calculated'],11.7391304)
+        self.assertAlmostEqual(values['power_factor_calculated'],0.925925926)
+        self.assertEqual(values['solar_power_total'],2717)
+        self.assertEqual(values['operating_mode'],'battery')
+
+    def test_derived_invalid_denominators_and_missing_pv2(self):
+        values=p.derived({'output_voltage':0,'load_apparent_power':0,'load_power':0,'pv1_power':100})
+        self.assertNotIn('output_current_calculated',values)
+        self.assertNotIn('power_factor_calculated',values)
+        self.assertNotIn('solar_power_total',values)
+        self.assertNotIn('power_factor_calculated',p.derived({'load_apparent_power':10,'load_power':11}))
 
     def test_only_read_queries(self):
         for command in ('POP00', 'QPIRI', 'QPIGS\r', '', 'PBATCD111'):
