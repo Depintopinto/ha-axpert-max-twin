@@ -22,12 +22,14 @@ class HomeAssistantTests(unittest.IsolatedAsyncioTestCase):
             bus=SimpleNamespace(async_listen_once=MagicMock()))
         entry = SimpleNamespace(entry_id='test', data={'path':'/dev/hidraw0','interval':30},
                                 async_on_unload=MagicMock(), add_update_listener=MagicMock())
-        with patch('custom_components.axpert_max_twin.AxpertCoordinator') as factory:
+        with patch('custom_components.axpert_max_twin._remove_obsolete_energy_entities') as cleanup, \
+             patch('custom_components.axpert_max_twin.AxpertCoordinator') as factory:
             coordinator = factory.return_value
             coordinator.async_config_entry_first_refresh = AsyncMock()
             self.assertTrue(await async_setup_entry(hass,entry))
             self.assertIs(entry.runtime_data,coordinator)
             coordinator.async_config_entry_first_refresh.assert_awaited_once()
+            cleanup.assert_called_once_with(hass,entry)
             hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(entry,['sensor'])
             self.assertTrue(await async_unload_entry(hass,entry))
 
@@ -78,8 +80,11 @@ class HomeAssistantTests(unittest.IsolatedAsyncioTestCase):
         sensors={d[0]:AxpertSensor(coordinator,entry,d) for d in SENSORS}
         self.assertEqual(sensors['load_power'].unique_id,'existing_load_power')
         self.assertEqual(sensors['pv1_power'].unique_id,'existing_pv1_power')
-        self.assertEqual(sensors['output_voltage'].name,'Tensión de salida AC')
-        self.assertEqual(sensors['grid_voltage'].name,'Tensión de entrada de red')
+        self.assertEqual(sensors['output_voltage'].name,'Salida Red · Tensión AC')
+        self.assertEqual(sensors['grid_voltage'].name,'Entrada Red · Tensión')
+        self.assertEqual(sensors['pv1_voltage'].name,'Fotovoltaica · Tensión PV1')
+        self.assertEqual(sensors['battery_voltage'].name,'Batería · Tensión')
+        self.assertEqual(sensors['load_power'].name,'Salida Red · Potencia activa AC')
         self.assertEqual(sensors['operating_mode'].native_value,'Batería')
         self.assertEqual(sensors['alarm_state'].extra_state_attributes['active_warnings'],['line_fail'])
 
