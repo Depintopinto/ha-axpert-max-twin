@@ -31,5 +31,125 @@
     "error": {
       "invalid_interval": "Introduce un valor entre 5 y 3600 segundos."
     }
+  },
+  "entity": {
+    "sensor": {
+      "pv1_current": {
+        "name": "PV1 input current"
+      },
+      "pv1_voltage": {
+        "name": "PV1 input voltage"
+      },
+      "pv1_power": {
+        "name": "PV1 charging power"
+      },
+      "pv2_current": {
+        "name": "PV2 input current"
+      },
+      "pv2_voltage": {
+        "name": "PV2 input voltage"
+      },
+      "pv2_power": {
+        "name": "PV2 charging power"
+      },
+      "load_power": {
+        "name": "AC output active power"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "battery_charge_current": {
+        "name": "Battery charging current"
+      },
+      "battery_discharge_current": {
+        "name": "Battery discharge current"
+      },
+      "battery_soc": {
+        "name": "Battery reported capacity"
+      },
+      "mode": {
+        "name": "Operating mode code"
+      },
+      "output_voltage": {
+        "name": "Tensión de salida AC"
+      },
+      "output_frequency": {
+        "name": "Frecuencia de salida AC"
+      },
+      "load_apparent_power": {
+        "name": "Potencia aparente de salida AC"
+      },
+      "load_percent": {
+        "name": "Carga del inversor"
+      },
+      "output_current_calculated": {
+        "name": "Corriente de salida AC calculada"
+      },
+      "power_factor_calculated": {
+        "name": "Factor de potencia calculado"
+      },
+      "solar_power_total": {
+        "name": "Potencia solar de carga total calculada"
+      },
+      "grid_voltage": {
+        "name": "Tensión de entrada de red"
+      },
+      "grid_frequency": {
+        "name": "Frecuencia de entrada de red"
+      },
+      "temperature": {
+        "name": "Temperatura del disipador"
+      },
+      "operating_mode": {
+        "name": "Modo de funcionamiento",
+        "state": {
+          "power_on": "Encendido",
+          "standby": "Espera",
+          "line": "Red",
+          "battery": "Batería",
+          "fault": "Fallo",
+          "shutdown": "Apagado",
+          "charge": "Carga",
+          "bypass": "Bypass",
+          "eco": "Eco"
+        }
+      },
+      "alarm_state": {
+        "name": "Alarmas y errores",
+        "state": {
+          "normal": "Sin avisos",
+          "warning": "Aviso",
+          "fault": "Fallo",
+          "unknown": "Sin clasificar"
+        }
+      },
+      "warning_raw": {
+        "name": "Estado de avisos original"
+      },
+      "load_energy": {
+        "name": "Energía salida AC estimada"
+      },
+      "load_energy_daily": {
+        "name": "Energía salida AC diaria estimada"
+      },
+      "load_energy_monthly": {
+        "name": "Energía salida AC mensual estimada"
+      },
+      "load_energy_yearly": {
+        "name": "Energía salida AC anual estimada"
+      },
+      "solar_energy": {
+        "name": "Energía solar de carga estimada"
+      },
+      "solar_energy_daily": {
+        "name": "Energía solar de carga diaria estimada"
+      },
+      "solar_energy_monthly": {
+        "name": "Energía solar de carga mensual estimada"
+      },
+      "solar_energy_yearly": {
+        "name": "Energía solar de carga anual estimada"
+      }
+    }
   }
 }
