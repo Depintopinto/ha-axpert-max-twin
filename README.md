@@ -59,7 +59,7 @@ estados de modo/alarma tienen traducciones al español y al inglés.
 
 Los kWh son **estimaciones** de la integral temporal de potencia, con persistencia y
 acumulados según la zona horaria de HA. No se importan datos históricos ni se rellenan
-desconexiones. Se guardan cada 60 segundos y al descargar la integración; un corte
+desconexiones. Se guardan cada 60 segundos, al descargar la integración y al apagar HA de forma normal; un corte
 abrupto puede perder la fracción aún no guardada. Para Energía elige los contadores
 totales de salida AC y solar, no los del día/mes/año.
 Consulta [metodología, campos exactos y límites](docs/v0.2.0.md).
