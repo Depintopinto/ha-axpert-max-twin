@@ -1,148 +1,113 @@
 # ha-axpert-max-twin
 
-Integración personalizada de Home Assistant, de **solo lectura**, para el perfil USB
-HID observado en un Axpert MAX TWIN 11 kW con WatchPower. Se instala como repositorio
-personalizado de HACS. Versión experimental `0.1.1`.
+Integración personalizada de Home Assistant para el perfil USB HID capturado en un
+Axpert MAX TWIN 11 kW. Compatible con repositorios personalizados de HACS. Solo consulta
+el inversor: **QPIGS, QPIGS2, QMOD y QPIWS**. No incorpora controles ni comandos arbitrarios.
 
-**Verificado:** reproducción offline de 29 respuestas completas de `prueba.pcapng`,
-CRC de las peticiones y respuestas, fragmentación de 8 bytes y sensores indicados
-abajo. **Pendiente:** conexión física desde Raspberry Pi 4 / HA OS aarch64, permisos
-del contenedor Core y funcionamiento con otros firmwares. No se declara compatibilidad
-con todos los MAX, MAX II o TWIN por compartir nombre o VID:PID.
+## Versiones
 
-## Instalación con HACS
+- **0.2.0:** 33 entidades: nuevos campos AC/red/temperatura, cálculos, alarmas y energía
+  estimada total, diaria, mensual y anual. [Detalle y límites](docs/v0.2.0.md).
+- **0.1.1:** respaldo con las 12 entidades originales y el intervalo configurable desde
+  5 segundos. [Recuperar respaldo](https://github.com/Depintopinto/ha-axpert-max-twin/releases/tag/v0.1.1).
 
-1. Detén WatchPower, la integración `axpert_inverter`, mppsolar y cualquier otro cliente
-   que consulte el mismo USB. El bloqueo es cooperativo y no impide que otro programa
-   que ignore el bloqueo use el dispositivo.
-2. En HACS, abre **Repositorios personalizados** y añade
+La ampliación se comprueba offline con 40 respuestas completas capturadas y pruebas
+en Home Assistant, incluida Core 2026.9.4. La comunicación de 0.1.1 funcionó físicamente
+en el equipo del usuario; QPIWS y los contadores nuevos quedan pendientes de prueba
+física después de actualizar. No se declara compatibilidad con otros firmwares por
+compartir nombre MAX/TWIN o VID:PID.
+
+## Instalación y actualización
+
+1. Detén WatchPower, `axpert_inverter`, mppsolar y otros clientes del mismo USB.
+2. En HACS → Repositorios personalizados, añade
    `https://github.com/Depintopinto/ha-axpert-max-twin`, categoría **Integración**.
-3. Descarga la integración y reinicia Home Assistant.
-4. Añade **Axpert MAX TWIN** en Ajustes → Dispositivos y servicios.
-5. Introduce el `/dev/hidrawN` correspondiente al inversor y un intervalo de al menos
-   5 segundos (predeterminado 5).
+3. **Descarga** la integración: añadir el repositorio no instala sus archivos.
+4. Reinicia Home Assistant completo y añade **Axpert MAX TWIN** en Dispositivos y servicios.
+5. Selecciona el `/dev/hidrawN` del inversor. Intervalo predeterminado: **5 segundos**.
+
+La actualización conserva el dispositivo, los identificadores de las 12 entidades
+originales y el intervalo guardado. En **Configurar** puedes cambiarlo entre 5 y 3600
+segundos; se recarga automáticamente. Actualizar archivos sí necesita reiniciar Core.
 
 Instalación manual: copia `custom_components/axpert_max_twin` a
-`/config/custom_components/axpert_max_twin` y reinicia. No necesita un módulo externo,
-MQTT, un add-on ni librerías USB compiladas. Solo usa Python y la interfaz hidraw de
-Linux; no desacopla el controlador del kernel. Home Assistant mínimo declarado: 2026.1.
-El manifest no instala dependencias. Esto evita una dependencia binaria específica de
-arquitectura, pero no sustituye la prueba en aarch64.
+`/config/custom_components/axpert_max_twin` y reinicia. No necesita dependencias USB
+binarias, MQTT ni un add-on adicional. Requiere Linux con hidraw; mínimo declarado de
+Core 2026.1. Está preparado para HA OS aarch64, con acceso USB dentro de Core.
 
 ### Si no aparece en «Añadir integración»
 
-La descarga de HACS no crea automáticamente un dispositivo. Tras reiniciar **Home
-Assistant completo**, busca **Axpert MAX TWIN** en «Añadir integración». Si sigue sin
-aparecer:
+Confirma que HACS descargó **Depintopinto/ha-axpert-max-twin** y que existen
+`/config/custom_components/axpert_max_twin/manifest.json` y `config_flow.py`.
+`ArnyminerZ/ha-axpert-inverter` es otra integración. Tras reiniciar, prueba Ctrl+F5 o
+[el formulario directo](https://my.home-assistant.io/redirect/config_flow_start/?domain=axpert_max_twin).
+Busca en los registros `axpert_max_twin`, `homeassistant.loader` o `config_flow`.
+Los errores de ESPHome o `axpert_inverter` no diagnostican esta integración.
 
-1. Confirma que HACS muestra el repositorio `Depintopinto/ha-axpert-max-twin`.
-   `ArnyminerZ/ha-axpert-inverter` es una integración diferente.
-2. Comprueba que existen `/config/custom_components/axpert_max_twin/manifest.json`
-   y `/config/custom_components/axpert_max_twin/config_flow.py`. Una carpeta dentro
-   de otra carpeta `custom_components` no es una instalación válida.
-3. Recarga el navegador sin caché (Ctrl+F5) o prueba una ventana privada.
-4. Abre [el formulario directamente](https://my.home-assistant.io/redirect/config_flow_start/?domain=axpert_max_twin).
-   Si el formulario abre, el problema está en la lista mostrada por la interfaz.
-   Si informa de una integración inexistente o un error de carga, revisa los registros
-   que contengan `axpert_max_twin`, `homeassistant.loader` o `config_flow`.
+## Sensores por grupo
 
-Los errores de `custom_components.axpert_inverter` corresponden a la integración
-antigua; los de ESPHome corresponden a otros dispositivos. Ninguno demuestra que
-`axpert_max_twin` se haya instalado. Deshabilita la antigua antes de configurar esta
-para evitar dos clientes del mismo USB. El formulario inicial no consulta hardware:
-la falta de USB no debe impedir que aparezca en la lista.
+| Grupo lógico | Entidades | Contenido |
+|---|---:|---|
+| Consumo / salida AC | 11 | V, Hz, VA, W, carga %, corriente calculada, factor de potencia y 4 contadores kWh estimados |
+| Solar | 11 | Los 6 sensores PV1/PV2, potencia total calculada y 4 contadores kWh estimados |
+| Estado del inversor | 11 | Red V/Hz, batería, temperatura del disipador, modo original y traducido, alarmas y trama de diagnóstico |
 
-El intervalo de una integración existente se cambia desde **Axpert MAX TWIN → Configurar**. Se admiten valores entre 5 y 3600 segundos y el cambio recarga la integración automáticamente. Las entradas existentes conservan su intervalo hasta que lo cambies.
+Los nombres y el atributo `sensor_group` permiten distinguir los grupos, manteniendo
+un único dispositivo. La trama original QPIWS es una entidad de diagnóstico deshabilitada
+por defecto; puedes habilitarla en el registro de entidades. Los campos nuevos y los
+estados de modo/alarma tienen traducciones al español y al inglés.
 
-## Sensores
+Los kWh son **estimaciones** de la integral temporal de potencia, con persistencia y
+acumulados según la zona horaria de HA. No se importan datos históricos ni se rellenan
+desconexiones. Se guardan cada 60 segundos y al descargar la integración; un corte
+abrupto puede perder la fracción aún no guardada. Para Energía elige los contadores
+totales de salida AC y solar, no los del día/mes/año.
+Consulta [metodología, campos exactos y límites](docs/v0.2.0.md).
 
-| Sensor | Consulta / índice (desde 0) | Unidad |
-|---|---|---|
-| PV1 input current | QPIGS / 12 | A |
-| PV1 input voltage | QPIGS / 13 | V |
-| PV1 charging power | QPIGS / 19 | W |
-| PV2 input current | QPIGS2 / 0 | A |
-| PV2 input voltage | QPIGS2 / 1 | V |
-| PV2 charging power | QPIGS2 / 2 | W |
-| AC output active power | QPIGS / 5 | W |
-| Battery voltage | QPIGS / 8 | V |
-| Battery charging current | QPIGS / 9 | A |
-| Battery reported capacity | QPIGS / 10 | % |
-| Battery discharge current | QPIGS / 15 | A |
-| Operating mode code | QMOD | código |
+El consumo es la salida AC comunicada por el inversor: no separa sus dos salidas ni
+consumos externos de la vivienda. El % de batería procede del inversor, no de un BMS
+independiente. Las potencias PV son las potencias de carga comunicadas. La corriente
+y el factor de potencia calculados no se presentan como mediciones directas.
 
-El consumo es la potencia activa de la salida AC comunicada por el inversor;
-no equivale necesariamente al consumo total de la vivienda ni separa las dos salidas
-TWIN. El porcentaje de batería es el valor informado por el inversor, no una lectura
-independiente del BMS. PV1/PV2 son las potencias de carga comunicadas; no se inventa
-potencia mediante V×I. No se generan contadores kWh artificiales. Para Energía, usa
-la integración Integral de Home Assistant sobre los sensores de potencia, teniendo en
-cuenta las interrupciones y el significado de cada medida.
+## USB y diagnósticos
 
-QPIGS debe tener exactamente 24 campos y CRC válido. Un perfil diferente se rechaza
-con un error explícito. QPIGS2 y QMOD son consultas opcionales: un fallo hace que sus
-sensores queden no disponibles, manteniendo las medidas válidas de QPIGS. Un fallo de
-QPIGS deja todas las entidades no disponibles; no presenta datos antiguos como nuevos.
+Perfil observado: `0665:5161`, interfaz 0, interrupt IN `0x81`, informes de 8 bytes y
+salida por SET_REPORT tipo Output / ID 0. Cada escritura hidraw lleva un byte de ID cero
+delante de los 8 bytes de datos. No se desacopla el controlador del kernel. Se verifican
+VID:PID mediante sysfs y la ruta seleccionada antes de transmitir. El bloqueo cooperativo
+no impide que otro programa que lo ignore use el mismo USB.
 
-## Diagnóstico y prueba en HA OS
+QPIGS exige 24 campos y CRC correcto. QPIWS exige las 36 posiciones binarias capturadas;
+las posiciones finales ambiguas no se interpretan como códigos de fallo. Un fallo de
+QPIGS deja las entidades no disponibles; los fallos opcionales solo afectan a entidades
+dependientes. PV2 desconocido no se convierte en potencia cero.
 
-La captura identifica USB `0665:5161`, interfaz 0, entrada interrupt `0x81` y ausencia
-de endpoint OUT. La salida se envía por HID `SET_REPORT`, tipo Output, ID 0, con
-informes de 8 bytes rellenados con ceros. En Linux cada escritura hidraw incluye además
-un byte inicial `0x00` que el kernel consume como report ID: **no es un noveno byte del
-protocolo USB**.
+Descarga diagnósticos desde el dispositivo: incluyen estado de las cuatro consultas y
+sus últimas tramas validadas, sin número de serie ni rutas de configuración. Que un
+terminal add-on vea el USB no demuestra acceso desde Core. Los nombres hidraw pueden
+cambiar tras una reconexión.
 
-La ruta debe existir dentro del entorno de Home Assistant Core, con permiso de lectura
-y escritura. Que un terminal add-on vea el USB no demuestra que Core pueda acceder.
-La integración también comprueba `HID_ID` en sysfs antes de transmitir. Si falla por
-permisos, dispositivo no encontrado o sysfs no accesible, exporta los registros de la
-integración y comprueba la exposición del dispositivo; no desactives protecciones
-como solución automática. Los nombres `/dev/hidrawN` pueden cambiar después de una
-reconexión; vuelve a configurar la ruta si cambia. La selección automática por número
-de serie todavía no está implementada.
-
-Descarga los diagnósticos desde la página de la integración. Incluyen estado de cada
-consulta y la última trama validada de las tres consultas permitidas. No incluyen
-números de serie, ruta de configuración ni texto de excepciones que pueda contener
-rutas. Los registros permiten distinguir timeout, respuesta incompleta, CRC incorrecto,
-NAK y longitud desconocida. Ningún servicio permite enviar comandos arbitrarios;
-no hay selectores, números, interruptores ni comandos que modifiquen el inversor.
-
-Para completar la validación física:
-
-1. Instala en HA OS aarch64 y confirma qué hidraw pertenece a `0665:5161`.
-2. Comprueba varias actualizaciones y compara voltajes, potencias y porcentaje con
-   la pantalla o con WatchPower usado en otro momento, sin dos clientes simultáneos.
-3. Desconecta USB y verifica entidades no disponibles; reconecta y verifica recuperación
-   si se conserva la misma ruta.
-4. Descarga diagnósticos y registra versiones de Core, HA OS y firmware. No marques
-   compatibilidad física confirmada hasta que esta prueba se complete.
-
-## Desarrollo
+## Pruebas y análisis
 
 ```sh
 python -m unittest discover -s tests -v
 python -m compileall -q custom_components tools
-# En Linux y en el Python requerido por Home Assistant:
-pip install 'homeassistant>=2026.1.0'
+# En Linux con el Python requerido por Home Assistant:
+pip install 'homeassistant==2026.9.4'
 python -m unittest discover -s tests_ha -v
 ```
 
-Las pruebas offline incluyen todas las respuestas QPIGS/QPIGS2/QMOD capturadas,
-rechazo de corrupción y tramas truncadas, NAK, comandos prohibidos, timeout,
-desconexión, informes fragmentados, escritura parcial y drenaje de datos antiguos.
-Las pruebas de Home Assistant usan sus clases reales con USB simulado y se ejecutan
-en un trabajo separado de CI. No son pruebas de hardware.
+Las pruebas cubren informes reales, CRC, comandos prohibidos, desconexiones, consultas
+opcionales, fórmulas, persistencia, cortes de lectura, límites de día/mes/año y horario
+de verano. CI comprueba Core 2026.9.4 y la versión disponible. Los fallos QPIWS modificados
+en las pruebas son sintéticos, no observados en la captura.
 
 ```sh
 python tools/analyze_capture.py /ruta/prueba.pcapng informe.json
 ```
 
-El analizador es offline y admite pcapng con EPB y enlace USBPcap (249). Conserva
-el número de paquete y distingue peticiones y completados para no duplicar respuestas.
-El informe completo puede contener identificadores de otras consultas: revísalo antes
-de compartirlo. El repositorio solo incluye las tres consultas solicitadas, sin la
-captura original ni transacciones de número de serie.
-
-Consulta [el análisis de la captura](docs/capture-analysis.md) y
-[el análisis del fallo original](docs/upstream-analysis.md).
+El analizador es offline para USBPcap/pcapng EPB (enlace 249). Su informe completo puede
+contener identificadores: revísalo antes de compartirlo. El repositorio solo incluye
+las cuatro consultas permitidas, sin captura original ni números de serie.
+Ver [captura](docs/capture-analysis.md), [fallo original](docs/upstream-analysis.md) y
+[versión nueva](docs/v0.2.0.md).
