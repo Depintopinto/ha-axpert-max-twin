@@ -1,0 +1,14 @@
+{
+  "title": "Axpert MAX TWIN",
+  "config": {
+    "step": {
+      "user": {
+        "title": "USB HID de solo lectura",
+        "description": "Perfil experimental de 24 campos verificado en la captura. Detén WatchPower y otros clientes USB. Pendiente de validación física en HA OS.",
+        "data": {"path": "Ruta hidraw de Linux", "interval": "Intervalo de consulta (segundos)"}
+      }
+    },
+    "error": {"invalid_path": "Introduce una ruta de dispositivo bajo /dev/"},
+    "abort": {"already_configured": "Esta ruta ya está configurada"}
+  }
+}
