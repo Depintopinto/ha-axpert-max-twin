@@ -6,31 +6,31 @@ from homeassistant.const import EntityCategory
 from .const import DOMAIN
 
 SENSORS = (
-    ('pv1_current', 'PV1 input current', 'A', SensorDeviceClass.CURRENT),
-    ('pv1_voltage', 'PV1 input voltage', 'V', SensorDeviceClass.VOLTAGE),
-    ('pv1_power', 'PV1 charging power', 'W', SensorDeviceClass.POWER),
-    ('pv2_current', 'PV2 input current', 'A', SensorDeviceClass.CURRENT),
-    ('pv2_voltage', 'PV2 input voltage', 'V', SensorDeviceClass.VOLTAGE),
-    ('pv2_power', 'PV2 charging power', 'W', SensorDeviceClass.POWER),
-    ('load_power', 'AC output active power', 'W', SensorDeviceClass.POWER),
-    ('battery_voltage', 'Battery voltage', 'V', SensorDeviceClass.VOLTAGE),
-    ('battery_charge_current', 'Battery charging current', 'A', SensorDeviceClass.CURRENT),
-    ('battery_discharge_current', 'Battery discharge current', 'A', SensorDeviceClass.CURRENT),
-    ('battery_soc', 'Battery reported capacity', '%', SensorDeviceClass.BATTERY),
-    ('mode', 'Operating mode code', None, None),
-    ('output_voltage', 'Tensión de salida AC', 'V', SensorDeviceClass.VOLTAGE),
-    ('output_frequency', 'Frecuencia de salida AC', 'Hz', SensorDeviceClass.FREQUENCY),
-    ('load_apparent_power', 'Potencia aparente de salida AC', 'VA', SensorDeviceClass.APPARENT_POWER),
-    ('load_percent', 'Porcentaje de carga del inversor', '%', None),
-    ('output_current_calculated', 'Corriente de salida AC calculada', 'A', SensorDeviceClass.CURRENT),
-    ('power_factor_calculated', 'Factor de potencia calculado', None, SensorDeviceClass.POWER_FACTOR),
-    ('solar_power_total', 'Potencia total de carga solar calculada', 'W', SensorDeviceClass.POWER),
-    ('grid_voltage', 'Tensión de entrada de red', 'V', SensorDeviceClass.VOLTAGE),
-    ('grid_frequency', 'Frecuencia de entrada de red', 'Hz', SensorDeviceClass.FREQUENCY),
-    ('temperature', 'Temperatura del disipador del inversor', '°C', SensorDeviceClass.TEMPERATURE),
-    ('operating_mode', 'Modo de funcionamiento', None, SensorDeviceClass.ENUM),
-    ('alarm_state', 'Estado de alarmas y errores', None, SensorDeviceClass.ENUM),
-    ('warning_raw', 'Trama original de avisos', None, None),
+    ('pv1_current', 'Fotovoltaica · Corriente PV1', 'A', SensorDeviceClass.CURRENT),
+    ('pv1_voltage', 'Fotovoltaica · Tensión PV1', 'V', SensorDeviceClass.VOLTAGE),
+    ('pv1_power', 'Fotovoltaica · Potencia de carga PV1', 'W', SensorDeviceClass.POWER),
+    ('pv2_current', 'Fotovoltaica · Corriente PV2', 'A', SensorDeviceClass.CURRENT),
+    ('pv2_voltage', 'Fotovoltaica · Tensión PV2', 'V', SensorDeviceClass.VOLTAGE),
+    ('pv2_power', 'Fotovoltaica · Potencia de carga PV2', 'W', SensorDeviceClass.POWER),
+    ('load_power', 'Salida Red · Potencia activa AC', 'W', SensorDeviceClass.POWER),
+    ('battery_voltage', 'Batería · Tensión', 'V', SensorDeviceClass.VOLTAGE),
+    ('battery_charge_current', 'Batería · Corriente de carga', 'A', SensorDeviceClass.CURRENT),
+    ('battery_discharge_current', 'Batería · Corriente de descarga', 'A', SensorDeviceClass.CURRENT),
+    ('battery_soc', 'Batería · Nivel comunicado', '%', SensorDeviceClass.BATTERY),
+    ('mode', 'General · Código de modo original', None, None),
+    ('output_voltage', 'Salida Red · Tensión AC', 'V', SensorDeviceClass.VOLTAGE),
+    ('output_frequency', 'Salida Red · Frecuencia AC', 'Hz', SensorDeviceClass.FREQUENCY),
+    ('load_apparent_power', 'Salida Red · Potencia aparente AC', 'VA', SensorDeviceClass.APPARENT_POWER),
+    ('load_percent', 'Salida Red · Porcentaje de carga', '%', None),
+    ('output_current_calculated', 'Salida Red · Corriente calculada', 'A', SensorDeviceClass.CURRENT),
+    ('power_factor_calculated', 'Salida Red · Factor de potencia calculado', None, SensorDeviceClass.POWER_FACTOR),
+    ('solar_power_total', 'Fotovoltaica · Potencia total calculada', 'W', SensorDeviceClass.POWER),
+    ('grid_voltage', 'Entrada Red · Tensión', 'V', SensorDeviceClass.VOLTAGE),
+    ('grid_frequency', 'Entrada Red · Frecuencia', 'Hz', SensorDeviceClass.FREQUENCY),
+    ('temperature', 'General · Temperatura del disipador', '°C', SensorDeviceClass.TEMPERATURE),
+    ('operating_mode', 'General · Modo de funcionamiento', None, SensorDeviceClass.ENUM),
+    ('alarm_state', 'General · Estado de alarmas y errores', None, SensorDeviceClass.ENUM),
+    ('warning_raw', 'General · Trama original de avisos', None, None),
 )
 
 TEXT_KEYS = {'mode', 'operating_mode', 'alarm_state', 'warning_raw'}
@@ -81,8 +81,10 @@ class AxpertSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        group = ('solar' if self.key.startswith(('pv', 'solar')) else
-                 'consumption' if self.key.startswith(('load', 'output', 'power_factor')) else 'inverter')
+        group = ('Fotovoltaica' if self.key.startswith(('pv', 'solar')) else
+                 'Salida Red' if self.key.startswith(('load', 'output', 'power_factor')) else
+                 'Entrada Red' if self.key.startswith('grid_') else
+                 'Batería' if self.key.startswith('battery_') else 'General')
         kind = 'calculated' if self.key in CALCULATED_KEYS else 'reported'
         attributes = {'sensor_group': group, 'measurement_kind': kind}
         if self.key == 'output_current_calculated':
