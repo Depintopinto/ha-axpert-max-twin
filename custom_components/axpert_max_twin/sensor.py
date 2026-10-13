@@ -4,7 +4,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.const import EntityCategory
 
 from .const import DOMAIN
-from .protocol import MODE_NAMES
 
 SENSORS = (
     ('pv1_current', 'PV1 input current', 'A', SensorDeviceClass.CURRENT),
@@ -19,27 +18,27 @@ SENSORS = (
     ('battery_discharge_current', 'Battery discharge current', 'A', SensorDeviceClass.CURRENT),
     ('battery_soc', 'Battery reported capacity', '%', SensorDeviceClass.BATTERY),
     ('mode', 'Operating mode code', None, None),
-    ('output_voltage', 'AC output voltage', 'V', SensorDeviceClass.VOLTAGE),
-    ('output_frequency', 'AC output frequency', 'Hz', SensorDeviceClass.FREQUENCY),
-    ('load_apparent_power', 'AC output apparent power', 'VA', SensorDeviceClass.APPARENT_POWER),
-    ('load_percent', 'Inverter load', '%', None),
-    ('output_current_calculated', 'AC output current (calculated)', 'A', SensorDeviceClass.CURRENT),
-    ('power_factor_calculated', 'Power factor (calculated)', None, SensorDeviceClass.POWER_FACTOR),
-    ('solar_power_total', 'Total solar charging power (calculated)', 'W', SensorDeviceClass.POWER),
-    ('grid_voltage', 'Grid input voltage', 'V', SensorDeviceClass.VOLTAGE),
-    ('grid_frequency', 'Grid input frequency', 'Hz', SensorDeviceClass.FREQUENCY),
-    ('temperature', 'Inverter heat sink temperature', '°C', SensorDeviceClass.TEMPERATURE),
-    ('operating_mode', 'Operating mode', None, SensorDeviceClass.ENUM),
-    ('alarm_state', 'Alarms and faults', None, SensorDeviceClass.ENUM),
-    ('warning_raw', 'Warning status (raw)', None, None),
-    *((f'{source}_energy{suffix}', f'{label} energy{description} (estimated)', 'kWh', SensorDeviceClass.ENERGY)
-      for source, label in (('load', 'AC output'), ('solar', 'Solar charging'))
-      for suffix, description in (('', ''), ('_daily', ' today'), ('_monthly', ' this month'), ('_yearly', ' this year'))),
+    ('output_voltage', 'Tensión de salida AC', 'V', SensorDeviceClass.VOLTAGE),
+    ('output_frequency', 'Frecuencia de salida AC', 'Hz', SensorDeviceClass.FREQUENCY),
+    ('load_apparent_power', 'Potencia aparente de salida AC', 'VA', SensorDeviceClass.APPARENT_POWER),
+    ('load_percent', 'Porcentaje de carga del inversor', '%', None),
+    ('output_current_calculated', 'Corriente de salida AC calculada', 'A', SensorDeviceClass.CURRENT),
+    ('power_factor_calculated', 'Factor de potencia calculado', None, SensorDeviceClass.POWER_FACTOR),
+    ('solar_power_total', 'Potencia total de carga solar calculada', 'W', SensorDeviceClass.POWER),
+    ('grid_voltage', 'Tensión de entrada de red', 'V', SensorDeviceClass.VOLTAGE),
+    ('grid_frequency', 'Frecuencia de entrada de red', 'Hz', SensorDeviceClass.FREQUENCY),
+    ('temperature', 'Temperatura del disipador del inversor', '°C', SensorDeviceClass.TEMPERATURE),
+    ('operating_mode', 'Modo de funcionamiento', None, SensorDeviceClass.ENUM),
+    ('alarm_state', 'Estado de alarmas y errores', None, SensorDeviceClass.ENUM),
+    ('warning_raw', 'Trama original de avisos', None, None),
 )
 
-BASE_KEYS = {definition[0] for definition in SENSORS[:12]}
 TEXT_KEYS = {'mode', 'operating_mode', 'alarm_state', 'warning_raw'}
 CALCULATED_KEYS = {'output_current_calculated', 'power_factor_calculated', 'solar_power_total'}
+MODE_LABELS = {'power_on': 'Encendido', 'standby': 'En espera', 'line': 'Red',
+               'battery': 'Batería', 'fault': 'Fallo', 'shutdown': 'Apagado',
+               'charge': 'Carga', 'bypass': 'Bypass', 'eco': 'Eco'}
+ALARM_LABELS = {'normal': 'Sin avisos', 'warning': 'Aviso', 'fault': 'Fallo', 'unknown': 'Sin clasificar'}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -53,20 +52,14 @@ class AxpertSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.key, self._attr_name, self._attr_native_unit_of_measurement, self._attr_device_class = definition
         self._attr_unique_id = f'{entry.entry_id}_{self.key}'
-        if self.key not in BASE_KEYS:
-            self._attr_translation_key = self.key
-            self._attr_name = None
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)},
                                            name='Axpert MAX TWIN', manufacturer='Voltronic Power')
         if self.key not in TEXT_KEYS:
             self._attr_state_class = SensorStateClass.MEASUREMENT
-        if '_energy' in self.key:
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-            self._attr_suggested_display_precision = 3
         if self.key == 'operating_mode':
-            self._attr_options = list(MODE_NAMES.values())
+            self._attr_options = list(MODE_LABELS.values())
         if self.key == 'alarm_state':
-            self._attr_options = ['normal', 'warning', 'fault', 'unknown']
+            self._attr_options = list(ALARM_LABELS.values())
         if self.key == 'warning_raw':
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
@@ -79,14 +72,18 @@ class AxpertSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return (self.coordinator.data or {}).get(self.key)
+        value = (self.coordinator.data or {}).get(self.key)
+        if self.key == 'operating_mode':
+            return MODE_LABELS.get(value, value)
+        if self.key == 'alarm_state':
+            return ALARM_LABELS.get(value, value)
+        return value
 
     @property
     def extra_state_attributes(self):
         group = ('solar' if self.key.startswith(('pv', 'solar')) else
                  'consumption' if self.key.startswith(('load', 'output', 'power_factor')) else 'inverter')
-        kind = ('estimated' if '_energy' in self.key else
-                'calculated' if self.key in CALCULATED_KEYS else 'reported')
+        kind = 'calculated' if self.key in CALCULATED_KEYS else 'reported'
         attributes = {'sensor_group': group, 'measurement_kind': kind}
         if self.key == 'output_current_calculated':
             attributes['assumption'] = 'single_phase_output'
