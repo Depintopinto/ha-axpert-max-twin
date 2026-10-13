@@ -29,6 +29,29 @@ Linux; no desacopla el controlador del kernel. Home Assistant mínimo declarado:
 El manifest no instala dependencias. Esto evita una dependencia binaria específica de
 arquitectura, pero no sustituye la prueba en aarch64.
 
+### Si no aparece en «Añadir integración»
+
+La descarga de HACS no crea automáticamente un dispositivo. Tras reiniciar **Home
+Assistant completo**, busca **Axpert MAX TWIN** en «Añadir integración». Si sigue sin
+aparecer:
+
+1. Confirma que HACS muestra el repositorio `Depintopinto/ha-axpert-max-twin`.
+   `ArnyminerZ/ha-axpert-inverter` es una integración diferente.
+2. Comprueba que existen `/config/custom_components/axpert_max_twin/manifest.json`
+   y `/config/custom_components/axpert_max_twin/config_flow.py`. Una carpeta dentro
+   de otra carpeta `custom_components` no es una instalación válida.
+3. Recarga el navegador sin caché (Ctrl+F5) o prueba una ventana privada.
+4. Abre [el formulario directamente](https://my.home-assistant.io/redirect/config_flow_start/?domain=axpert_max_twin).
+   Si el formulario abre, el problema está en la lista mostrada por la interfaz.
+   Si informa de una integración inexistente o un error de carga, revisa los registros
+   que contengan `axpert_max_twin`, `homeassistant.loader` o `config_flow`.
+
+Los errores de `custom_components.axpert_inverter` corresponden a la integración
+antigua; los de ESPHome corresponden a otros dispositivos. Ninguno demuestra que
+`axpert_max_twin` se haya instalado. Deshabilita la antigua antes de configurar esta
+para evitar dos clientes del mismo USB. El formulario inicial no consulta hardware:
+la falta de USB no debe impedir que aparezca en la lista.
+
 ## Sensores
 
 | Sensor | Consulta / índice (desde 0) | Unidad |
