@@ -125,30 +125,6 @@
       },
       "warning_raw": {
         "name": "Warning status (raw)"
-      },
-      "load_energy": {
-        "name": "AC output energy (estimated)"
-      },
-      "load_energy_daily": {
-        "name": "AC output energy today (estimated)"
-      },
-      "load_energy_monthly": {
-        "name": "AC output energy this month (estimated)"
-      },
-      "load_energy_yearly": {
-        "name": "AC output energy this year (estimated)"
-      },
-      "solar_energy": {
-        "name": "Solar charging energy (estimated)"
-      },
-      "solar_energy_daily": {
-        "name": "Solar charging energy today (estimated)"
-      },
-      "solar_energy_monthly": {
-        "name": "Solar charging energy this month (estimated)"
-      },
-      "solar_energy_yearly": {
-        "name": "Solar charging energy this year (estimated)"
       }
     }
   }

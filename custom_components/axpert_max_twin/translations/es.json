@@ -125,30 +125,6 @@
       },
       "warning_raw": {
         "name": "Estado de avisos original"
-      },
-      "load_energy": {
-        "name": "Energía salida AC estimada"
-      },
-      "load_energy_daily": {
-        "name": "Energía salida AC diaria estimada"
-      },
-      "load_energy_monthly": {
-        "name": "Energía salida AC mensual estimada"
-      },
-      "load_energy_yearly": {
-        "name": "Energía salida AC anual estimada"
-      },
-      "solar_energy": {
-        "name": "Energía solar de carga estimada"
-      },
-      "solar_energy_daily": {
-        "name": "Energía solar de carga diaria estimada"
-      },
-      "solar_energy_monthly": {
-        "name": "Energía solar de carga mensual estimada"
-      },
-      "solar_energy_yearly": {
-        "name": "Energía solar de carga anual estimada"
       }
     }
   }
