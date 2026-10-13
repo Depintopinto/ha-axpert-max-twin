@@ -5,10 +5,31 @@
       "user": {
         "title": "Read-only USB HID",
         "description": "Experimental captured 24-field profile. Stop WatchPower and all other USB clients. Hardware validation on HA OS is pending.",
-        "data": {"path": "Linux hidraw path", "interval": "Polling interval (seconds)"}
+        "data": {
+          "path": "Linux hidraw path",
+          "interval": "Polling interval (seconds)"
+        }
       }
     },
-    "error": {"invalid_path": "Enter a device path under /dev/"},
-    "abort": {"already_configured": "This device path is already configured"}
+    "error": {
+      "invalid_path": "Enter a device path under /dev/"
+    },
+    "abort": {
+      "already_configured": "This device path is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling interval",
+        "description": "The new interval applies when saved, without restarting Home Assistant.",
+        "data": {
+          "interval": "Polling interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "invalid_interval": "Enter a value between 5 and 3600 seconds."
+    }
   }
 }

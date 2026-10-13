@@ -5,10 +5,31 @@
       "user": {
         "title": "USB HID de solo lectura",
         "description": "Perfil experimental de 24 campos verificado en la captura. Detén WatchPower y otros clientes USB. Pendiente de validación física en HA OS.",
-        "data": {"path": "Ruta hidraw de Linux", "interval": "Intervalo de consulta (segundos)"}
+        "data": {
+          "path": "Ruta hidraw de Linux",
+          "interval": "Intervalo de consulta (segundos)"
+        }
       }
     },
-    "error": {"invalid_path": "Introduce una ruta de dispositivo bajo /dev/"},
-    "abort": {"already_configured": "Esta ruta ya está configurada"}
+    "error": {
+      "invalid_path": "Introduce una ruta de dispositivo bajo /dev/"
+    },
+    "abort": {
+      "already_configured": "Esta ruta ya está configurada"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Intervalo de consulta",
+        "description": "El nuevo intervalo se aplica al guardar, sin reiniciar Home Assistant.",
+        "data": {
+          "interval": "Intervalo de consulta (segundos)"
+        }
+      }
+    },
+    "error": {
+      "invalid_interval": "Introduce un valor entre 5 y 3600 segundos."
+    }
   }
 }
