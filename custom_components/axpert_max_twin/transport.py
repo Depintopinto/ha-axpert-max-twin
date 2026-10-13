@@ -5,7 +5,7 @@ import select
 import threading
 import time
 
-from .protocol import ProtocolError, output_reports, parse
+from .protocol import COMMANDS, ProtocolError, output_reports, parse
 
 
 class HidrawTransport:
@@ -15,7 +15,7 @@ class HidrawTransport:
         self.lock = threading.Lock()
         self.last_command = 0.0
         self.diagnostics = {command: {'status': 'not_polled'}
-                            for command in ('QPIGS', 'QPIGS2', 'QMOD')}
+                            for command in COMMANDS}
 
     def poll(self):
         # The complete polling cycle has exclusive ownership, including the optional queries.
@@ -34,7 +34,7 @@ class HidrawTransport:
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             result = {}
-            for command in ('QPIGS', 'QPIGS2', 'QMOD'):
+            for command in COMMANDS:
                 try:
                     data, frame = self._query(fd, command)
                     result.update(data)
@@ -43,7 +43,7 @@ class HidrawTransport:
                     self.diagnostics[command] = {'status': type(err).__name__, 'error': str(err)}
                     if command == 'QPIGS':
                         # Nothing from a failed cycle may appear as fresh data.
-                        for optional in ('QPIGS2', 'QMOD'):
+                        for optional in COMMANDS[1:]:
                             self.diagnostics[optional] = {'status': 'not_polled'}
                         raise
             return result

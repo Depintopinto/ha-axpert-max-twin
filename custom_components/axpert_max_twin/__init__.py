@@ -5,6 +5,7 @@ from .coordinator import AxpertCoordinator
 
 async def async_setup_entry(hass, entry):
     coordinator = AxpertCoordinator(hass, entry)
+    await coordinator.async_restore_energy()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -13,7 +14,10 @@ async def async_setup_entry(hass, entry):
 
 
 async def async_unload_entry(hass, entry):
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        await entry.runtime_data.async_save_energy()
+    return unloaded
 
 
 async def async_reload_entry(hass, entry):
