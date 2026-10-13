@@ -1,0 +1,14 @@
+{
+  "title": "Axpert MAX TWIN",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Read-only USB HID",
+        "description": "Experimental captured 24-field profile. Stop WatchPower and all other USB clients. Hardware validation on HA OS is pending.",
+        "data": {"path": "Linux hidraw path", "interval": "Polling interval (seconds)"}
+      }
+    },
+    "error": {"invalid_path": "Enter a device path under /dev/"},
+    "abort": {"already_configured": "This device path is already configured"}
+  }
+}
